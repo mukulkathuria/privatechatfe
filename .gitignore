@@ -1,0 +1,14 @@
+/node_modules
+/build
+/dist
+
+# for environment file (Protected)
+.env.*
+
+
+#editor files
+.vscode
+
+
+#error files
+yarn.error*

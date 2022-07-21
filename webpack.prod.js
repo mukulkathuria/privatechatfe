@@ -1,0 +1,103 @@
+/* eslint-disable import/no-extraneous-dependencies */
+const path = require('path');
+const { EnvironmentPlugin } = require('webpack');
+const DotEnv = require('dotenv-webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const { merge } = require('webpack-merge');
+const common = require('./webpack.common');
+
+const SRC_DIR = path.join(__dirname, 'src');
+const PUB_DIR = path.join(__dirname, 'public');
+const BUILD_DIR = path.join(__dirname, 'build');
+
+module.exports = merge(common, {
+  mode: 'production',
+  output: {
+    filename: '[name].[contentHash].bundle.js',
+    path: BUILD_DIR,
+    publicPath: '/'
+  },
+  optimization: {
+    minimize: true,
+    runtimeChunk: {
+      name: (entrypoint) => `runtimechunk~${entrypoint.name}`
+    },
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          name: 'node_vendors',
+          test: /[\\/]node_modules[\\/]/,
+          chunks: 'all'
+        }
+      }
+    },
+    minimizer: [
+      new OptimizeCssAssetsPlugin(),
+      new TerserPlugin({
+        terserOptions: {
+          format: {
+            comments: false
+          }
+        },
+        extractComments: false,
+        parallel: true
+      }),
+      new HtmlWebpackPlugin({
+        template: `${PUB_DIR}/index.html`,
+        // favicon: `${PUB_DIR}/favicon.ico`,
+        minify: {
+          collapseWhitespace: true,
+          removeComments: true,
+          removeRedundantAttributes: true,
+          removeScriptTypeAttributes: true,
+          removeStyleLinkTypeAttributes: true,
+          useShortDoctype: true,
+          removeAttributeQuotes: true
+        }
+      })
+    ]
+  },
+  performance: {
+    maxAssetSize: 512000,
+    maxEntrypointSize: 400000
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: 'static/css/[name].[contenthash].css',
+      chunkFilename: 'static/css/[id].[contenthash].css'
+    }),
+    new CleanWebpackPlugin(),
+    new EnvironmentPlugin({
+      NODE_ENV: 'production',
+      DEBUG: false
+    }),
+    new DotEnv({
+      path: '.env.production'
+    })
+  ],
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        include: SRC_DIR,
+        use: [MiniCssExtractPlugin.loader, 'css-loader']
+      },
+      {
+        test: /\.(jpe?g|png|gif)$/i,
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              name: '[name].[hash].[ext]',
+              outputPath: 'static/images'
+            }
+          }
+        ]
+      }
+    ]
+  }
+});
