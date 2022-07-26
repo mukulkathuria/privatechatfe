@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // eslint-disable-next-line object-curly-newline
 import React, { lazy, memo, useCallback, useEffect, useState, FC } from 'react';
 import SuspenseLoader from 'src/Components/common/SuspenseLoader/SuspenseLoader';
@@ -24,8 +25,17 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
 
   useEffect(() => {
     const initializeSocket = async () => {
-      const { socket } = await import('src/Data/socket.io');
+      const { socketinit } = await import('src/Data/socket.io');
       const { appDispatch } = await import('src/Redux/store/store');
+      const {
+        default: { get }
+      } = await import('js-cookie');
+      const { getUserDetails } = await import(
+        'src/services/User/user.services'
+      );
+      const { ACCESS_TOKEN_LOC } = await import(
+        'src/Constants/common.constants'
+      );
       const { toggleFriendOnline } = await import(
         'src/Redux/actions/chat.reducer.actions'
       );
@@ -37,6 +47,7 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
         appDispatch(toggleFriendOnline(Boolean(selectedUser?.isOnline)));
       };
 
+      const socket = socketinit.socket();
       socket.on('joinedUser', (data) => {
         verifyFriendOnline(data);
         setMessageData(() => data);
@@ -52,6 +63,21 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
         setMessageData(() => data);
       });
 
+      socket.on('tokenexpired', async () => {
+        await getUserDetails();
+        const token = get(ACCESS_TOKEN_LOC);
+        socketinit.addtoken(token || '');
+        socket.emit('joinchatroom', {
+          roomid: selected?.chatroomid,
+          username
+        });
+      });
+
+      socket.on('invalidUser', () => {
+        const token = get(ACCESS_TOKEN_LOC);
+        socketinit.addtoken(token || '');
+      });
+
       socket.emit('joinchatroom', {
         roomid: selected?.chatroomid,
         username
@@ -62,7 +88,8 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
     }
     return () => {
       const deinitializeSocket = async () => {
-        const { socket } = await import('src/Data/socket.io');
+        const { socketinit } = await import('src/Data/socket.io');
+        const socket = socketinit.socket();
         socket.emit('leavechatroom', {
           roomid: selected?.chatroomid,
           username
@@ -77,7 +104,8 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
   const sendMessage = useCallback(
     async (message) => {
       if (messagedata) {
-        const { socket } = await import('src/Data/socket.io');
+        const { socketinit } = await import('src/Data/socket.io');
+        const socket = socketinit.socket();
         socket.emit('sendMessage', {
           roomid: selected.chatroomid,
           username,

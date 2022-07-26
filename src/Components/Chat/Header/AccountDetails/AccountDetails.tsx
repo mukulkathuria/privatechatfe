@@ -50,6 +50,7 @@ const AccountDetails = () => {
     <div id="accountsdetails" style={{ display: 'none' }}>
       <BackDropAcc {...backdropProps} />
       <AccDetails>
+        <Logout>Profile</Logout>
         <Logout onClick={handleLogout}>Log out</Logout>
       </AccDetails>
     </div>

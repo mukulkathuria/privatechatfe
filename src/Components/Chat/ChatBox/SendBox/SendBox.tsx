@@ -17,7 +17,7 @@ const SendBox: FC<sendBoxProps> = memo((props: sendBoxProps) => {
   };
 
   const handleEnter = (e: KeyboardEvent<HTMLDivElement>): void => {
-    if (e.key === 'Enter' && message) {
+    if (e.key === 'Enter' && message.trim().length) {
       handleSubmit();
     }
   };
@@ -32,10 +32,10 @@ const SendBox: FC<sendBoxProps> = memo((props: sendBoxProps) => {
       />
       <SuccesBtn
         type="button"
-        disabled={message.length === 0}
+        disabled={message.trim().length === 0}
         onClick={handleSubmit}
       >
-        Submit
+        ➜
       </SuccesBtn>
     </div>
   );
