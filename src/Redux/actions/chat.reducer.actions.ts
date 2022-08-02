@@ -1,8 +1,10 @@
 import { ThunkDispatch } from '@reduxjs/toolkit';
+import { ChatRoutes } from '../dtos/chat.reducer.dto';
 import { storeType } from '../store/store';
 import {
   ADD_CHAT_IN_CHATBOX,
   CHANGE_CHAT_DIALOG,
+  CHANGE_CHAT_ROUTE,
   GET_CHAT_DATA,
   SELECT_CHAT,
   TOGGLE_FRIEND_ONLINE
@@ -69,3 +71,8 @@ export const toggleFriendOnline = (payload: boolean) => {
     }
   };
 };
+
+export const changeChatRoute = (route: ChatRoutes | null) => ({
+  type: CHANGE_CHAT_ROUTE,
+  payload: route
+});

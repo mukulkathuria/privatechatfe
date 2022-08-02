@@ -1,12 +1,13 @@
-import { contactsDto } from 'src/Components/Chat/ContactModal/Contacts/dto/contacts.dto';
+import { ChatRoutes } from '../dtos/chat.reducer.dto';
 
-export const addtoChatBox = (userdata: any, payload: any) => {
-  const user = {
-    ...userdata,
-    chats: [payload],
-    contacts: userdata.contacts.filter(
-      (l: contactsDto) => l.username !== payload.username
-    )
-  };
-  return user;
+export const checkchatRoute = (payload: any) => {
+  if (!payload) {
+    return null;
+  }
+  const route = payload as string;
+  if (route in ChatRoutes) {
+    const key = route as keyof typeof ChatRoutes;
+    return ChatRoutes[key];
+  }
+  return null;
 };

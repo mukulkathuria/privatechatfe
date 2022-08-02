@@ -33,6 +33,15 @@ const AccountDetails = () => {
     }
   }, []);
 
+  const handleProfile = useCallback(async () => {
+    const { changeChatRoute } = await import(
+      'src/Redux/actions/chat.reducer.actions'
+    );
+    const { appDispatch } = await import('src/Redux/store/store');
+    const { ChatRoutes } = await import('src/Redux/dtos/chat.reducer.dto');
+    appDispatch(changeChatRoute(ChatRoutes.profile));
+  }, []);
+
   const hideAccountDetails = useCallback((e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
     const accountdetails = document.getElementById('accountsdetails');
@@ -50,7 +59,7 @@ const AccountDetails = () => {
     <div id="accountsdetails" style={{ display: 'none' }}>
       <BackDropAcc {...backdropProps} />
       <AccDetails>
-        <Logout>Profile</Logout>
+        <Logout onClick={handleProfile}>Profile</Logout>
         <Logout onClick={handleLogout}>Log out</Logout>
       </AccDetails>
     </div>

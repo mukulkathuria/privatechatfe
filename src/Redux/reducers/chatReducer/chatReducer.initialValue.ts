@@ -6,5 +6,6 @@ export const chatInitialValue: chatReducerDto = {
   chatDialog: false,
   selectedChat: null,
   isFriendOnline: false,
-  currentStep: 0
+  currentStep: 0,
+  chatRoute: null
 };
