@@ -2,10 +2,12 @@ import { actionDto } from 'src/Redux/dtos/common.filter.dto';
 import {
   ADD_CHAT_IN_CHATBOX,
   CHANGE_CHAT_DIALOG,
+  CHANGE_CHAT_ROUTE,
   GET_CHAT_DATA,
   SELECT_CHAT,
   TOGGLE_FRIEND_ONLINE
 } from 'src/Redux/types/chat.reducer.type';
+import { checkchatRoute } from 'src/Redux/utils/chat.reducer.utils';
 import { getReducerData } from 'src/Redux/utils/reducer.common.utils';
 import { chatInitialValue } from './chatReducer.initialValue';
 
@@ -49,6 +51,13 @@ const chatReducer = (state = chatInitialValue, action: actionDto) => {
         ...state,
         isFriendOnline: Boolean(payload)
       };
+
+    case CHANGE_CHAT_ROUTE:
+      return {
+        ...state,
+        chatRoute: checkchatRoute(payload)
+      };
+
     default:
       return state;
   }

@@ -12,10 +12,16 @@ type contactsDto = {
   selectedIndex: number;
 }
 
+// eslint-disable-next-line no-shadow
+export enum ChatRoutes {
+  profile = 'profile'
+}
+
 export type chatReducerDto = {
   userData: initialdataDto;
   chatDialog: boolean;
   selectedChat: contactsDto | null;
   isFriendOnline: boolean;
   currentStep: number;
+  chatRoute: ChatRoutes | null
 };

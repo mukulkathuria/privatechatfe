@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 // eslint-disable-next-line object-curly-newline
 import React, { lazy, memo, useCallback, useEffect, useState, FC } from 'react';
 import SuspenseLoader from 'src/Components/common/SuspenseLoader/SuspenseLoader';
@@ -28,7 +27,7 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
       const { socketinit } = await import('src/Data/socket.io');
       const { appDispatch } = await import('src/Redux/store/store');
       const {
-        default: { get }
+        default: { get, set, remove }
       } = await import('js-cookie');
       const { getUserDetails } = await import(
         'src/services/User/user.services'
@@ -39,6 +38,10 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
       const { toggleFriendOnline } = await import(
         'src/Redux/actions/chat.reducer.actions'
       );
+      const sendData = {
+        roomid: selected?.chatroomid,
+        username
+      };
 
       const verifyFriendOnline = (data: any) => {
         const selectedUser = data.users?.find(
@@ -67,21 +70,37 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
         await getUserDetails();
         const token = get(ACCESS_TOKEN_LOC);
         socketinit.addtoken(token || '');
-        socket.emit('joinchatroom', {
-          roomid: selected?.chatroomid,
-          username
-        });
+        const lastEmit = JSON.parse(get('lastEmit') || '{}');
+        if (lastEmit && Object.keys(lastEmit).length) {
+          Object.keys(lastEmit).forEach((l: string) => {
+            socket.emit(l, lastEmit[l]);
+            remove('lastEmit');
+          });
+        }
       });
 
       socket.on('invalidUser', () => {
         const token = get(ACCESS_TOKEN_LOC);
-        socketinit.addtoken(token || '');
+        if (token) {
+          socketinit.addtoken(token || '');
+          const lastEmit = JSON.parse(get('lastEmit') || '{}');
+          if (lastEmit && Object.keys(lastEmit).length) {
+            Object.keys(lastEmit).forEach((l: string) => {
+              socket.emit(l, lastEmit[l]);
+              remove('lastEmit');
+            });
+          }
+        }
       });
 
-      socket.emit('joinchatroom', {
-        roomid: selected?.chatroomid,
-        username
-      });
+      socket.emit('joinchatroom', sendData);
+      set(
+        'lastEmit',
+        JSON.stringify({
+          joinchatroom: sendData
+        }),
+        { expires: 1 / 288 }
+      );
     };
     if (selected) {
       initializeSocket();
@@ -89,11 +108,21 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
     return () => {
       const deinitializeSocket = async () => {
         const { socketinit } = await import('src/Data/socket.io');
+        const {
+          default: { set }
+        } = await import('js-cookie');
         const socket = socketinit.socket();
         socket.emit('leavechatroom', {
           roomid: selected?.chatroomid,
           username
         });
+        set(
+          'lastEmit',
+          JSON.stringify({
+            leavechatroom: { roomid: selected?.chatroomid, username }
+          }),
+          { expires: 1 / 288 }
+        );
       };
       if (selected) {
         deinitializeSocket();
@@ -105,12 +134,22 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
     async (message) => {
       if (messagedata) {
         const { socketinit } = await import('src/Data/socket.io');
+        const {
+          default: { set }
+        } = await import('js-cookie');
         const socket = socketinit.socket();
         socket.emit('sendMessage', {
           roomid: selected.chatroomid,
           username,
           message
         });
+        set(
+          'lastEmit',
+          JSON.stringify({
+            sendMessage: { roomid: selected.chatroomid, username, message }
+          }),
+          { expires: 1 / 288 }
+        );
       }
     },
     [messagedata]

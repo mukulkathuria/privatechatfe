@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import ErrorBoundary from './Components/ErrorBoundary';
+import Notifications from './Components/Notification/Notification';
 import Routes from './Routes/routes';
 
 class App extends PureComponent {
@@ -17,6 +18,7 @@ class App extends PureComponent {
   render(): React.ReactNode {
     return (
       <ErrorBoundary>
+        <Notifications />
         <BrowserRouter>
           <Routes />
         </BrowserRouter>

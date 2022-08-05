@@ -21,7 +21,7 @@ export const decodeAccessToken = (token: string) => {
   }
 };
 
-export const isMobileDevice = (userAgent: string): Boolean => {
+export const isMobileDevice = (userAgent: string): boolean => {
   const toMatch = [
     /Android/i,
     /webOS/i,
@@ -39,4 +39,10 @@ export const addDays = (days: number): Date => {
   const result = new Date();
   result.setDate(result.getDate() + days);
   return result;
+};
+
+export const convertFile = async (basestr: string, fileName: string) => {
+  const res: Response = await fetch(basestr);
+  const blob: Blob = await res.blob();
+  return new File([blob], fileName, { type: 'image/png' });
 };
