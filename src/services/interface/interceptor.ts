@@ -36,6 +36,13 @@ axios.interceptors.request.use(async (config) => {
   return config;
 });
 
+axios.defaults.headers.common = {
+  'Cache-Control':
+    'no-store, no-cache, max-age=0, must-revalidate, proxy-revalidate',
+  Pragma: 'no-cache',
+  Expires: '0'
+};
+
 axios.interceptors.response.use(undefined, async (err) => {
   const onrequest = err.config;
   const token = cookie.get(ACCESS_TOKEN_LOC);

@@ -3,11 +3,15 @@ import React, {
   ChangeEvent,
   FC,
   KeyboardEvent,
+  lazy,
   memo,
   useCallback,
   useState
 } from 'react';
+import SuspenseLoader from 'src/Components/common/SuspenseLoader/SuspenseLoader';
 import { useAppSelector } from 'src/Redux/store/store';
+import { getProfile } from 'src/utils/getPicsUrl';
+import ImageOptions from './ImageOptions/ImageOptions';
 import {
   BackButtonDiv,
   BackdropImage,
@@ -21,6 +25,10 @@ import {
   ProfilePicParent
 } from './style/userprofile.style';
 
+const PhotoModel = SuspenseLoader(
+  lazy(() => import('./PhotoModel/PhotoModel'))
+);
+
 const BackButton = require('src/assets/backbutton.png').default;
 const NoUser = require('src/assets/nouser.jpg').default;
 const Pencil = require('src/assets/pencil.png').default;
@@ -32,6 +40,15 @@ const UserProfile: FC = () => {
     value: '',
     editOpt: false
   });
+
+  const [showModal, setModal] = useState<boolean>(false);
+
+  const showImageOptions = () => {
+    const accountdetails = document.getElementById('imageOptions');
+    if (accountdetails) {
+      accountdetails.style.display = '';
+    }
+  };
 
   const handleBack = useCallback(async () => {
     const { changeChatRoute } = await import(
@@ -58,6 +75,50 @@ const UserProfile: FC = () => {
     setEditName(() => ({ ...editName, value }));
   };
 
+  const handleNameSave = async () => {
+    if (editName.value && editName.value.trim().length) {
+      if (editName.value === data?.name) {
+        setEditName(() => ({ value: '', editOpt: false }));
+      } else {
+        const { appDispatch } = await import('src/Redux/store/store');
+        const { showNotifications } = await import(
+          'src/Redux/actions/notifications.actions'
+        );
+        const { NotificationAlerts } = await import(
+          'src/Redux/dtos/notifications.dto'
+        );
+        try {
+          const { updateUser } = await import(
+            'src/services/User/user.services'
+          );
+          const { ADD_CHAT_IN_CHATBOX } = await import(
+            'src/Redux/types/chat.reducer.type'
+          );
+          const query = {
+            updatename: editName.value
+          };
+          const payload = await updateUser(query);
+          appDispatch({ type: ADD_CHAT_IN_CHATBOX, payload });
+          appDispatch(
+            showNotifications({ message: 'Successfully saved your name' })
+          );
+          setEditName(() => ({ value: '', editOpt: false }));
+        } catch (error) {
+          appDispatch(
+            showNotifications({
+              message: 'Some error occur',
+              alert: NotificationAlerts.error
+            })
+          );
+        }
+      }
+    }
+  };
+
+  const photoModelProps = {
+    handleCloseModel: () => setModal(() => false)
+  };
+
   return (
     <div>
       <ProfileHeaderDiv>
@@ -74,12 +135,16 @@ const UserProfile: FC = () => {
         </ProfileButton>
       </ProfileHeaderDiv>
       <ProfilePicParent>
-        <ProfilePic>
+        <ProfilePic onClick={showImageOptions}>
           <BackdropImage className="backdropimg" />
-          <img src={data?.profile || NoUser} alt="" />
+          <img src={getProfile(data?.profile) || NoUser} alt="" />
           <ChangePicHoverDiv className="changepictext">
             <ChangePicHoverText>Change your profile picture</ChangePicHoverText>
           </ChangePicHoverDiv>
+          <ImageOptions
+            profile={data?.profile as string}
+            handleOpen={() => setModal(() => true)}
+          />
         </ProfilePic>
       </ProfilePicParent>
       <ProfilePicParent onKeyDown={handleEsc}>
@@ -100,7 +165,7 @@ const UserProfile: FC = () => {
                   autoFocus
                   onChange={handleChange}
                 />
-                <div>
+                <div role="button" aria-hidden="true" onClick={handleNameSave}>
                   <img src={CorrectMark} alt="" />
                 </div>
               </>
@@ -108,8 +173,9 @@ const UserProfile: FC = () => {
           </ProfileName>
         </ProfileNameWidth>
       </ProfilePicParent>
+      {showModal ? <PhotoModel {...photoModelProps} /> : null}
     </div>
   );
 };
 
-export default memo(UserProfile, () => true);
+export default memo(UserProfile);
