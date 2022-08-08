@@ -7,6 +7,8 @@ interface Messag {
   senderUsername: string;
   message: string;
   createdAt: string;
+  isFile: boolean;
+  filePath: string;
 }
 interface Props {
   messages: Messag[];

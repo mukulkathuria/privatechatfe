@@ -131,7 +131,7 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
   }, [selected]);
 
   const sendMessage = useCallback(
-    async (message) => {
+    async (message: string) => {
       if (messagedata) {
         const { socketinit } = await import('src/Data/socket.io');
         const {
@@ -155,12 +155,26 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
     [messagedata]
   );
 
+  const sendFile = useCallback(async (file: File) => {
+    const { socketinit } = await import('src/Data/socket.io');
+    const socket = socketinit.socket();
+    socket.emit('sendFile', {
+      roomid: selected.chatroomid,
+      username,
+      file,
+      mimeType: file.type
+    });
+    // eslint-disable-next-line no-console
+    console.log(file);
+  }, []);
+
   const messageProps = {
     messages: messagedata?.messages || []
   };
 
   const sendBoxProps = {
-    sendMessage
+    sendMessage,
+    sendFile
   };
 
   const chatBoxHeaderProps = {

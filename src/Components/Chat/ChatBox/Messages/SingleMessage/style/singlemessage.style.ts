@@ -36,3 +36,22 @@ export const MessageDiv = styled.div`
 export const Timestamp = styled.div`
   font-size: 10px;
 `;
+
+export const MessageShow = styled.div`
+  max-height: 30vh;
+  width: 50%;
+  img {
+    height: 100%;
+    width: 100%;
+    cursor: pointer;
+  }
+`;
+
+export const EditImageOptions = styled.div`
+  position: relative;
+  img {
+    height: 20px;
+    width: 20px;
+    cursor: pointer;
+  }
+`;
