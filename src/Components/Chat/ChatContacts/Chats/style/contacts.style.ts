@@ -28,4 +28,11 @@ export const ContactsLeftDiv = styled.div`
 
 export const ContactsRightDiv = styled.div`
   width: 85%;
+  display: flex;
+  flex-direction: column;
+`;
+
+export const LastMessageDiv = styled.div`
+  display: flex;
+  justify-content: space-between;
 `;

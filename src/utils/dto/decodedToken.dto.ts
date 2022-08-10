@@ -5,4 +5,5 @@ export type decodedTokenDto = {
   reId: string;
   roles: string;
   username: string;
+  gender: string;
 };
