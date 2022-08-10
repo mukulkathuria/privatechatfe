@@ -10,7 +10,8 @@ export const socketinit = {
     return ioclient(BASEURL, {
       auth: {
         token: 'Bearer ' + token
-      }
+      },
+      reconnectionAttempts: 10
     });
   },
   addtoken: function addtoken(token: string) {
