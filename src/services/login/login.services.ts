@@ -35,3 +35,28 @@ export const getLogout = async (
   const { data } = await post(LogoutUrl, params);
   return data;
 };
+
+export const getRefreshToken = async () => {
+  const { BASEURL } = await import('src/Data/baseUrl');
+  const { ACCESS_TOKEN_LOC, REFRESH_TOKEN_LOC } = await import(
+    'src/Constants/common.constants'
+  );
+  const {
+    default: { set, get }
+  } = await import('js-cookie');
+  const values = {
+    refresh_token: get(REFRESH_TOKEN_LOC)
+  };
+  const RefreshTokenUrl = BASEURL + 'auth/refreshtoken';
+  const {
+    default: { post }
+  } = await import('../interface/interceptor');
+  const {
+    data: { access_token }
+  } = await post(RefreshTokenUrl, values);
+
+  if (access_token) {
+    set(ACCESS_TOKEN_LOC, access_token);
+  }
+  return access_token;
+};

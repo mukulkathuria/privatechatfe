@@ -1,7 +1,7 @@
 type UserDto = {
   username: string;
   name: string;
-  profile_pic: string;
+  profile: string;
 };
 
 export type ChatContactsDto = {

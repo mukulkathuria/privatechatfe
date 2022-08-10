@@ -1,6 +1,7 @@
 // eslint-disable-next-line object-curly-newline
 import React, { lazy, memo, useCallback, useEffect, useState, FC } from 'react';
 import SuspenseLoader from 'src/Components/common/SuspenseLoader/SuspenseLoader';
+import { socketinit } from 'src/Data/socket.io';
 import { useAppSelector } from 'src/Redux/store/store';
 import { ChatBoxDiv } from './style/chatbox.style';
 
@@ -24,13 +25,12 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
 
   useEffect(() => {
     const initializeSocket = async () => {
-      const { socketinit } = await import('src/Data/socket.io');
       const { appDispatch } = await import('src/Redux/store/store');
       const {
         default: { get, set, remove }
       } = await import('js-cookie');
-      const { getUserDetails } = await import(
-        'src/services/User/user.services'
+      const { getRefreshToken } = await import(
+        'src/services/login/login.services'
       );
       const { ACCESS_TOKEN_LOC } = await import(
         'src/Constants/common.constants'
@@ -66,17 +66,21 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
         setMessageData(() => data);
       });
 
-      socket.on('tokenexpired', async () => {
-        await getUserDetails();
-        const token = get(ACCESS_TOKEN_LOC);
-        socketinit.addtoken(token || '');
-        const lastEmit = JSON.parse(get('lastEmit') || '{}');
-        if (lastEmit && Object.keys(lastEmit).length) {
-          Object.keys(lastEmit).forEach((l: string) => {
-            socket.emit(l, lastEmit[l]);
+      socket.on('tokenexpired', () => {
+        socketinit.removetoken();
+        getRefreshToken().then((token) => {
+          socket.auth = { token: 'Bearer ' + token };
+          socket.disconnect().connect();
+          socketinit.addtoken((token as string) || '');
+          const lastEmit = get('lastEmit');
+          if (lastEmit) {
+            const emitted = JSON.parse(lastEmit || '{}');
+            Object.keys(emitted).forEach((l: string) => {
+              setTimeout(() => socket.emit(l, emitted[l]), 500);
+            });
             remove('lastEmit');
-          });
-        }
+          }
+        });
       });
 
       socket.on('invalidUser', () => {
@@ -93,7 +97,6 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
         }
       });
 
-      socket.emit('joinchatroom', sendData);
       set(
         'lastEmit',
         JSON.stringify({
@@ -101,13 +104,13 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
         }),
         { expires: 1 / 288 }
       );
+      socket.emit('joinchatroom', sendData);
     };
     if (selected) {
       initializeSocket();
     }
     return () => {
       const deinitializeSocket = async () => {
-        const { socketinit } = await import('src/Data/socket.io');
         const {
           default: { set }
         } = await import('js-cookie');
@@ -133,16 +136,12 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
   const sendMessage = useCallback(
     async (message: string) => {
       if (messagedata) {
-        const { socketinit } = await import('src/Data/socket.io');
         const {
           default: { set }
         } = await import('js-cookie');
-        const socket = socketinit.socket();
-        socket.emit('sendMessage', {
-          roomid: selected.chatroomid,
-          username,
-          message
-        });
+        const { getRefreshToken } = await import(
+          'src/services/login/login.services'
+        );
         set(
           'lastEmit',
           JSON.stringify({
@@ -150,13 +149,33 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
           }),
           { expires: 1 / 288 }
         );
+        const socket = socketinit.socket();
+        socket.emit('sendMessage', {
+          roomid: selected.chatroomid,
+          username,
+          message
+        });
+        socket.on('tokenexpired', () => {
+          getRefreshToken().then((token) => {
+            socket.auth = { token: 'Bearer ' + token };
+            socket.disconnect().connect();
+            socketinit.addtoken((token as string) || '');
+            socket.emit('sendMessage', {
+              roomid: selected.chatroomid,
+              username,
+              message
+            });
+          });
+        });
       }
     },
     [messagedata]
   );
 
   const sendFile = useCallback(async (file: File) => {
-    const { socketinit } = await import('src/Data/socket.io');
+    const { getRefreshToken } = await import(
+      'src/services/login/login.services'
+    );
     const socket = socketinit.socket();
     socket.emit('sendFile', {
       roomid: selected.chatroomid,
@@ -164,8 +183,33 @@ const ChatBox: FC<ChatBoxProps> = memo((props: ChatBoxProps) => {
       file,
       mimeType: file.type
     });
-    // eslint-disable-next-line no-console
-    console.log(file);
+    socket.on('tokenexpired', () => {
+      getRefreshToken().then((token) => {
+        socket.auth = { token: 'Bearer ' + token };
+        socket.disconnect().connect();
+        socketinit.addtoken((token as string) || '');
+        socket.emit('sendMessage', {
+          roomid: selected.chatroomid,
+          username,
+          file,
+          mimeType: file.type
+        });
+      });
+    });
+    const { appDispatch } = await import('src/Redux/store/store');
+    const { toggleFriendOnline } = await import(
+      'src/Redux/actions/chat.reducer.actions'
+    );
+    const verifyFriendOnline = (data: any) => {
+      const selectedUser = data.users?.find(
+        (l: any) => l.username === selected?.user?.username
+      );
+      appDispatch(toggleFriendOnline(Boolean(selectedUser?.isOnline)));
+    };
+    socket.on('message', (data) => {
+      verifyFriendOnline(data);
+      setMessageData(() => data);
+    });
   }, []);
 
   const messageProps = {

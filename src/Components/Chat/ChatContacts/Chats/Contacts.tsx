@@ -4,6 +4,7 @@
 import React, { memo } from 'react';
 import Loader from 'src/Components/Loader';
 import { useAppDispatch, useAppSelector } from 'src/Redux/store/store';
+import { getProfile } from 'src/utils/getPicsUrl';
 import { ChatContactsDto } from './dto/chat.contacts.dto';
 import {
   ContactsDiv,
@@ -46,7 +47,7 @@ const Contacts = memo(() => {
           onClick={() => handleSelect(i)}
         >
           <ContactsLeftDiv>
-            <img src={l.user.profile_pic || NoUserImage} alt="profile" />
+            <img src={getProfile(l.user.profile) || NoUserImage} alt="profile" />
           </ContactsLeftDiv>
           <ContactsRightDiv>{l.user.name}</ContactsRightDiv>
         </ContactsDiv>
