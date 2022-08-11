@@ -61,9 +61,15 @@ const Contacts = memo(() => {
             <LastMessageDiv>
               <div>
                 <strong>
-                  {l?.chatInfo?.lastMessage?.sender === currentUser ? 'You: ' : ''}
+                  {l?.chatInfo?.lastMessage?.sender === currentUser
+                    ? 'You: '
+                    : ''}
                 </strong>
-                {l?.chatInfo?.lastMessage?.message}
+                {l?.unseenMessages ? (
+                  <strong>{l?.chatInfo?.lastMessage?.message}</strong>
+                ) : (
+                  l?.chatInfo?.lastMessage?.message
+                )}
               </div>
               <div>{l?.unseenMessages || ''}</div>
             </LastMessageDiv>
