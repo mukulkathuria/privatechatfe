@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const Inputs = styled.input`
+export const Inputs = styled.textarea`
   padding: 10px;
   width: 90%;
   background-color: #f1f1f1;
@@ -14,16 +14,28 @@ export const Inputs = styled.input`
   }
 `;
 export const SuccesBtn = styled.button`
-  padding: 10px;
   background-color: blue;
   color: white;
   cursor: pointer;
   border: none;
   border-radius: 5px;
-  width: 10%;
+  width: 5%;
   outline: none;
   :disabled {
     background-color: lightblue;
     cursor: default;
+  }
+`;
+
+export const AttachmentBtn = styled.div`
+  width: 5%;
+`;
+
+export const SendBoxDiv = styled.div`
+  display: flex;
+  align-items: center;
+  img {
+    height: 25px;
+    width: 100%;
   }
 `;

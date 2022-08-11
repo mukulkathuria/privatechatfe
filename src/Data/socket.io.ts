@@ -5,15 +5,20 @@ import { BASEURL } from 'src/Data/baseUrl';
 
 export const socketinit = {
   token: '',
-  socket: function soket() {
-    const token = Cookies.get(ACCESS_TOKEN_LOC) || this.token || '';
+  socket: function soket(tokenid?: string) {
+    const token = tokenid || Cookies.get(ACCESS_TOKEN_LOC) || this.token || '';
     return ioclient(BASEURL, {
-      extraHeaders: {
-        Authorization: 'Bearer ' + token
-      }
+      auth: {
+        token: 'Bearer ' + token
+      },
+      reconnectionAttempts: 10
     });
   },
   addtoken: function addtoken(token: string) {
     this.token = token;
+  },
+
+  removetoken: function removetoken() {
+    this.token = '';
   }
 };

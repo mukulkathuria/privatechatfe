@@ -4,11 +4,13 @@
 import React, { memo } from 'react';
 import Loader from 'src/Components/Loader';
 import { useAppDispatch, useAppSelector } from 'src/Redux/store/store';
+import { getProfile } from 'src/utils/getPicsUrl';
 import { ChatContactsDto } from './dto/chat.contacts.dto';
 import {
   ContactsDiv,
   ContactsLeftDiv,
-  ContactsRightDiv
+  ContactsRightDiv,
+  LastMessageDiv
 } from './style/contacts.style';
 
 const NoUserImage = require('src/assets/nouser.jpg').default;
@@ -19,6 +21,9 @@ const Contacts = memo(() => {
   );
 
   const selected = useAppSelector((state) => state.chatReducer.selectedChat);
+  const currentUser = useAppSelector(
+    (state) => state.chatReducer.userData.data?.username
+  );
   const dispatch = useAppDispatch();
 
   const handleSelect = async (index: number) => {
@@ -46,9 +51,29 @@ const Contacts = memo(() => {
           onClick={() => handleSelect(i)}
         >
           <ContactsLeftDiv>
-            <img src={l.user.profile_pic || NoUserImage} alt="profile" />
+            <img
+              src={getProfile(l.user.profile) || NoUserImage}
+              alt="profile"
+            />
           </ContactsLeftDiv>
-          <ContactsRightDiv>{l.user.name}</ContactsRightDiv>
+          <ContactsRightDiv>
+            <div>{l.user.name}</div>
+            <LastMessageDiv>
+              <div>
+                <strong>
+                  {l?.chatInfo?.lastMessage?.sender === currentUser
+                    ? 'You: '
+                    : ''}
+                </strong>
+                {l?.unseenMessages ? (
+                  <strong>{l?.chatInfo?.lastMessage?.message}</strong>
+                ) : (
+                  l?.chatInfo?.lastMessage?.message
+                )}
+              </div>
+              <div>{l?.unseenMessages || ''}</div>
+            </LastMessageDiv>
+          </ContactsRightDiv>
         </ContactsDiv>
       ))
     : null;

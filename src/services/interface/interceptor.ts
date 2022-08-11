@@ -51,8 +51,8 @@ axios.interceptors.response.use(undefined, async (err) => {
   }
   if (
     (err?.response?.config?.url === BASEURL + 'auth/refreshtoken' &&
-      err?.response?.status === 403) ||
-    err?.response?.status === 403 ||
+      err?.response?.status >= 400 && err?.response?.status < 500) ||
+    err?.response?.status === 401 ||
     !token
   ) {
     await removeUserData();
@@ -96,13 +96,12 @@ axios.interceptors.response.use(undefined, async (err) => {
       const setRefUrl = BASEURL + 'auth/refreshtoken';
       axios
         .post(setRefUrl, {
-          token: refreshToken
+          refresh_token: refreshToken
         })
-        .then(({ data: { access_token, refresh_token } }) => {
+        .then(({ data: { access_token } }) => {
           axios.defaults.headers.common.Authorization =
             'Bearer ' + access_token;
           cookie.set(ACCESS_TOKEN_LOC, access_token);
-          cookie.set(REFRESH_TOKEN_LOC, refresh_token);
           processQueue(null, access_token);
           resolve(axios(onrequest));
         })
